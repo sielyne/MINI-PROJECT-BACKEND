@@ -201,7 +201,8 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             console.log('Received POST /register with body:', body);
             try {
-                const parsed = querystring.parse(body);
+                const parsed = JSON.parse(body);
+
                 console.log('Parsed body:', parsed);
                 if (!parsed.username || !parsed.password) {
                     res.writeHead(400, { 'Content-Type': 'text/plain' });
@@ -246,7 +247,8 @@ const server = http.createServer((req, res) => {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
-            const parsed = querystring.parse(body);
+            const parsed = JSON.parse(body);
+
             let users = loadUsers();
             const user = users.find(u => u.username === parsed.username);
             if (!user) {

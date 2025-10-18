@@ -3,9 +3,13 @@ const fs = require('fs');
 const querystring = require('querystring');
 const path = require('path');
 const bcrypt = require('bcrypt');
-const cors = require('cors');
-app.use(cors());
 
+// === 🔹 OPTIONS & CORS HANDLER 🔹 ===
+function setCorsHeaders(res) {
+    res.setHeader('Access-Control-Allow-Origin', 'https://your-frontend.vercel.app'); // ganti sesuai frontend
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
 
 const DATA_DIR = 'data';
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -32,6 +36,12 @@ function saveMood(moodData) { fs.writeFileSync(MOOD_FILE, JSON.stringify(moodDat
 function saveQuiz(quizData) { fs.writeFileSync(QUIZ_FILE, JSON.stringify(quizData, null, 2)); }
 
 const server = http.createServer((req, res) => {
+    // ✅ CORS + preflight
+    setCorsHeaders(res);
+    if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        return res.end();
+    }
 
     // ✅ Verifikasi password sebelum ubah/hapus
     if (req.method === 'POST' && req.url === '/user-verify-password') {
@@ -536,7 +546,7 @@ const server = http.createServer((req, res) => {
     }
     
     // Handle quiz submission
-    else if (req.method === 'POST' && req.url === '/quiz') {
+    if (req.method === 'POST' && req.url === '/quiz') {
         let body = '';
         req.on('data', chunk => body += chunk.toString());
         req.on('end', async () => {
@@ -544,7 +554,6 @@ const server = http.createServer((req, res) => {
                 const { username, answers, result, recommendation } = JSON.parse(body);
                 const users = loadUsers();
                 const user = users.find(u => u.username === username);
-                
                 if (!user) {
                     res.writeHead(404, { 'Content-Type': 'application/json' });
                     return res.end(JSON.stringify({ error: 'User not found' }));
@@ -567,19 +576,14 @@ const server = http.createServer((req, res) => {
                 saveQuiz(quizData);
                 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true, quiz: {
-                    id: quizRecord.id,
-                    date: quizRecord.date,
-                    answers: quizRecord.answers,
-                    result: quizRecord.result,
-                    recommendation: quizRecord.recommendation
-                }}));
+                res.end(JSON.stringify({ success: true, quiz: quizRecord }));
             } catch (err) {
                 console.error('Error in /quiz:', err);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Error saving quiz' }));
             }
         });
+        return;
     }
     // Handle quiz history
     else if (req.method === 'GET' && req.url.startsWith('/quiz-history')) {

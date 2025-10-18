@@ -3,6 +3,9 @@ const fs = require('fs');
 const querystring = require('querystring');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const cors = require('cors');
+app.use(cors());
+
 
 const DATA_DIR = 'data';
 const USERS_FILE = path.join(DATA_DIR, 'users.json');

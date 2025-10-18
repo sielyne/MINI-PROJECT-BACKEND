@@ -5,8 +5,8 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 
 // === 🔹 OPTIONS & CORS HANDLER 🔹 ===
-function setCorsHeaders(res) {
-    res.setHeader('Access-Control-Allow-Origin', 'https://your-frontend.vercel.app'); // ganti sesuai frontend
+function setCorsHeaders(res) {res.setHeader('Access-Control-Allow-Origin', '*');
+
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }

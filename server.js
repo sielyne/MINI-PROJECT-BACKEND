@@ -279,7 +279,8 @@ const server = http.createServer((req, res) => {
             console.log("=== BMI REQUEST DITERIMA ===");
             console.log("Raw body:", body);
 
-            const parsed = querystring.parse(body);
+            const parsed = JSON.parse(body);
+
             console.log("Parsed body:", parsed);
 
             const users = loadUsers();

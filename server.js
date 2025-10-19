@@ -4,7 +4,6 @@ const querystring = require('querystring');
 const path = require('path');
 const bcrypt = require('bcrypt');
 
-// === 🔹 OPTIONS & CORS HANDLER 🔹 ===
 function setCorsHeaders(res) {res.setHeader('Access-Control-Allow-Origin', '*');
 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -25,7 +24,6 @@ function initStorage() {
     if (!fs.existsSync(QUIZ_FILE)) fs.writeFileSync(QUIZ_FILE, JSON.stringify([], null, 2));
 }
 
-// Load & save helpers
 function loadUsers() { return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); }
 function loadBMI() { return JSON.parse(fs.readFileSync(BMI_FILE, 'utf8')); }
 function loadMood() { return JSON.parse(fs.readFileSync(MOOD_FILE, 'utf8')); }
@@ -36,14 +34,12 @@ function saveMood(moodData) { fs.writeFileSync(MOOD_FILE, JSON.stringify(moodDat
 function saveQuiz(quizData) { fs.writeFileSync(QUIZ_FILE, JSON.stringify(quizData, null, 2)); }
 
 const server = http.createServer((req, res) => {
-    // ✅ CORS + preflight
     setCorsHeaders(res);
     if (req.method === 'OPTIONS') {
         res.writeHead(200);
         return res.end();
     }
 
-    // ✅ Verifikasi password sebelum ubah/hapus
     if (req.method === 'POST' && req.url === '/user-verify-password') {
         let body = '';
         req.on('data', chunk => body += chunk.toString());
@@ -68,7 +64,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ✅ Update username/password
     if (req.method === 'PUT' && req.url === '/user-update') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -110,7 +105,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ✅ Hapus user + datanya
     if (req.method === 'DELETE' && req.url === '/user-delete') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -134,7 +128,6 @@ const server = http.createServer((req, res) => {
                 users = users.filter(u => u.id !== userId);
                 saveUsers(users);
 
-                // Hapus semua data terkait
                 saveBMI(loadBMI().filter(b => b.userId !== userId));
                 saveMood(loadMood().filter(m => m.userId !== userId));
                 saveQuiz(loadQuiz().filter(q => q.userId !== userId));
@@ -150,7 +143,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Serve JavaScript files
     if (req.method === 'GET' && (req.url === '/handler.js' || (req.url.startsWith('/features/') && req.url.endsWith('.js')))) {
         const jsPath = path.join(__dirname, req.url);
         fs.readFile(jsPath, (err, content) => {
@@ -164,7 +156,6 @@ const server = http.createServer((req, res) => {
         });
         return;
     }
-    // Serve CSS files
     if (req.method === 'GET' && (req.url === '/style.css' || (req.url.startsWith('/features/') && req.url.endsWith('.css')))) {
         const cssPath = path.join(__dirname, req.url);
         fs.readFile(cssPath, (err, content) => {
@@ -178,7 +169,7 @@ const server = http.createServer((req, res) => {
         });
         return;
     }
-    // Serve HTML files
+    
     if (req.method === 'GET' && (req.url === '/' || (req.url.startsWith('/features/') && req.url.endsWith('.html')))) {
         const filePath = req.url === '/' ? 'index.html' : req.url;
         const htmlPath = path.join(__dirname, filePath);
@@ -194,7 +185,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Handle register
     else if (req.method === 'POST' && req.url === '/register') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -242,7 +232,6 @@ const server = http.createServer((req, res) => {
         });
     }
     
-    // Handle login
     else if (req.method === 'POST' && req.url === '/login') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -271,7 +260,6 @@ const server = http.createServer((req, res) => {
         });
     }
     
-    // Handle BMI calculation
     else if (req.method === 'POST' && req.url === '/bmi') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -295,7 +283,6 @@ const server = http.createServer((req, res) => {
             const height = parseFloat(parsed.height);
             const weight = parseFloat(parsed.weight);
 
-            // Validasi input
             if (height < 100 || height > 250 || weight < 30 || weight > 200) {
                 console.log("Input tidak valid!");
                 res.writeHead(400, {'Content-Type': 'application/json'});
@@ -364,7 +351,6 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify(userBMIs));
     }
-    // Handle BMI update
     else if (req.method === 'PUT' && req.url === '/bmi') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -385,7 +371,6 @@ const server = http.createServer((req, res) => {
                 return res.end(JSON.stringify({ error: "Record not found" }));
             }
 
-            // Update field
             record.height = parsed.height;
             record.weight = parsed.weight;
             record.value = (parsed.weight / ((parsed.height / 100) ** 2)).toFixed(2);
@@ -405,7 +390,6 @@ const server = http.createServer((req, res) => {
             }}));
         });
     }
-    // Handle BMI delete
     else if (req.method === 'DELETE' && req.url === '/bmi') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
@@ -427,7 +411,6 @@ const server = http.createServer((req, res) => {
             res.end(JSON.stringify({ success: true }));
         });
     }
-    // Handle mood creation
     else if (req.method === 'POST' && req.url === '/mood') {
         let body = '';
         req.on('data', chunk => body += chunk.toString());
@@ -466,7 +449,6 @@ const server = http.createServer((req, res) => {
             res.end(JSON.stringify({ success: true }));
         });
     }
-    // Handle mood history
     else if (req.method === 'GET' && req.url.startsWith('/mood-history')) {
         const urlParams = new URLSearchParams(req.url.split('?')[1]);
         const username = urlParams.get('username');
@@ -490,7 +472,6 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify(userMoods));
     }
     
-    // Handle mood update
     else if (req.method === 'PUT' && req.url === '/mood') {
         let body = '';
         req.on('data', chunk => body += chunk.toString());
@@ -525,7 +506,6 @@ const server = http.createServer((req, res) => {
             }}));
         });
     }
-    // Handle mood delete
     else if (req.method === 'DELETE' && req.url === '/mood') {
         let body = '';
         req.on('data', chunk => body += chunk.toString());
@@ -548,7 +528,6 @@ const server = http.createServer((req, res) => {
         });
     }
     
-    // Handle quiz submission
     if (req.method === 'POST' && req.url === '/quiz') {
         let body = '';
         req.on('data', chunk => body += chunk.toString());
@@ -588,7 +567,6 @@ const server = http.createServer((req, res) => {
         });
         return;
     }
-    // Handle quiz history
     else if (req.method === 'GET' && req.url.startsWith('/quiz-history')) {
         try {
             const urlObj = new URL(req.url, `http://${req.headers.host}`);
@@ -621,7 +599,6 @@ const server = http.createServer((req, res) => {
 
 
 
-// === 🔍 SEARCH HISTORY ROUTE ===
 else if (req.method === 'GET' && req.url.startsWith('/search-history')) {
     try {
         const urlObj = new URL(req.url, `http://${req.headers.host}`);
@@ -677,7 +654,6 @@ else if (req.method === 'GET' && req.url.startsWith('/search-history')) {
     }
 }
 
-    // Assets
     else if (req.method === 'GET' && req.url.startsWith('/assets/')) {
         const imgPath = path.join(__dirname, req.url);
         fs.readFile(imgPath, (err, content) => {
